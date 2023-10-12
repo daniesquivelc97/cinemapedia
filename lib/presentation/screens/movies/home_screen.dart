@@ -41,7 +41,7 @@ class _HomeViewState extends ConsumerState<_HomeView> {
         const CustomAppBar(),
         MovieSlideShow(movies: slideShowMovies),
         MovieHorizontalListview(
-          movie: nowPlayingMovies,
+          movies: nowPlayingMovies,
           title: 'En cines',
           subtitle: 'Lunes 24',
         ),
