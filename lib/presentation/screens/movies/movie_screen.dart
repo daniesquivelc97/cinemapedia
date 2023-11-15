@@ -181,12 +181,19 @@ class _ActorsByMovie extends ConsumerWidget {
   }
 }
 
+final isFavoriteProvider =
+    FutureProvider.family.autoDispose((ref, int movieId) {
+  final localStorageRepository = ref.watch(localStorageRepositoryProvider);
+  return localStorageRepository.isMovieFavorite(movieId);
+});
+
 class _CustomSliverAppBar extends ConsumerWidget {
   final Movie movie;
   const _CustomSliverAppBar({Key? key, required this.movie}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isFavoriteFuture = ref.watch(isFavoriteProvider(movie.id));
     final size = MediaQuery.of(context).size;
     return SliverAppBar(
       backgroundColor: Colors.black,
@@ -194,12 +201,28 @@ class _CustomSliverAppBar extends ConsumerWidget {
       foregroundColor: Colors.white,
       actions: [
         IconButton(
-          onPressed: () {
-            ref.watch(localStorageRepositoryProvider).toggleFavorite(movie);
-          },
-          icon: const Icon(Icons.favorite_border),
-          // icon: const Icon(Icons.favorite_rounded, color: Colors.red,),
-        ),
+            onPressed: () async {
+              // ref.watch(localStorageRepositoryProvider).toggleFavorite(movie);
+              await ref
+                  .read(favoriteMoviesProvider.notifier)
+                  .toggleFavorite(movie);
+              ref.invalidate(isFavoriteProvider(movie.id));
+            },
+            icon: isFavoriteFuture.when(
+              data: (isFavorite) => isFavorite
+                  ? const Icon(
+                      Icons.favorite_rounded,
+                      color: Colors.red,
+                    )
+                  : const Icon(Icons.favorite_border),
+              error: (_, __) => throw UnimplementedError(),
+              loading: () => const CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
+            )
+            // const Icon(Icons.favorite_border),
+            // icon: const Icon(Icons.favorite_rounded, color: Colors.red,),
+            ),
       ],
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
